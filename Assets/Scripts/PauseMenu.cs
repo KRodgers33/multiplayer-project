@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Mirror;
 
 public class PauseMenu : MonoBehaviour
 {
@@ -6,7 +7,7 @@ public class PauseMenu : MonoBehaviour
 
     private void Update()
     {
-        // lock or unlock mouse on key P
+        // Lock or unlock mouse on key P
         if (Input.GetKeyDown(KeyCode.P))
         {
             if (Cursor.lockState == CursorLockMode.Locked)
@@ -19,8 +20,16 @@ public class PauseMenu : MonoBehaviour
             }
         }
 
-        // Allow cursor if game inactive (if player is gone)
-        if (Cursor.lockState != CursorLockMode.Locked && GameObject.FindGameObjectWithTag("Player") != null)
+        // Check if local client has a player active
+        bool localPlayerActive = false;
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        for (int i = 0; i < players.Length; i++)
+        {
+            if (players[i].GetComponent<NetworkIdentity>().hasAuthority == true) localPlayerActive = true;
+        }
+
+        // Pause game if mouse isn't locked and local client is in game
+        if (Cursor.lockState != CursorLockMode.Locked && localPlayerActive)
         {
             pauseMenu.SetActive(true);
         }

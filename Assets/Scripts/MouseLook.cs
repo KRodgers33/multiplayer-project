@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Mirror;
+using System.Collections;
 
 public class MouseLook : NetworkBehaviour
 {
@@ -8,23 +9,30 @@ public class MouseLook : NetworkBehaviour
     [SerializeField] Transform playerBody = null;
 
     float xRotation = 0f;
-
-    void Start()
+    
+    IEnumerator Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        if (!transform.parent.GetComponent<NetworkIdentity>().isLocalPlayer) { gameObject.SetActive(false); }
+        // Wait to see if object belongs to you or not
+        yield return new WaitForEndOfFrame();
+
+        // Disable object if camera doesnt belong to you
+        if (!transform.parent.GetComponent<NetworkIdentity>().hasAuthority) { gameObject.SetActive(false); }
     }
 
     void Update()
     {
-        if (Cursor.lockState != CursorLockMode.Locked || !transform.parent.GetComponent<NetworkIdentity>().isLocalPlayer) { return; }
+        // Don't do anything if the game is paused
+        if (Cursor.lockState != CursorLockMode.Locked || !transform.parent.GetComponent<NetworkIdentity>().hasAuthority) { return; }
 
+        // Get mouse inputs
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
+        // Do some math
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
+        // Update camera position
         playerBody.Rotate(Vector3.up * mouseX);
         transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
     }
